@@ -104,7 +104,8 @@ export function FlowCharts({ result }: Props) {
             <CartesianGrid vertical={false} stroke="#f1f5f9" />
             <XAxis dataKey="ticker" tick={{ fontSize: 12, fill: "#64748b" }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false}
-              tickFormatter={(v: number) => `${v.toFixed(1)}%`} width={40} />
+              tickFormatter={(v: number) => `${v.toFixed(1)}%`} width={40}
+              domain={["dataMin", 0]} />
             <Tooltip content={(props) => <SimpleTooltip {...props} unit="%" proxyLabels={proxyLabels} />} />
             <Bar dataKey="value" radius={[0, 0, 4, 4]}>
               {drawdownData.map((d, i) => (
