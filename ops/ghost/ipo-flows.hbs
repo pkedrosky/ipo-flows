@@ -1,0 +1,48 @@
+{{!< default}}
+
+{{#page}}
+  <article class="post ghost-content prose md:prose-lg prose-theme">
+    <h1>IPO Flow <span style="color:{{@site.accent_color}}">Impact Simulator</span></h1>
+    <p>Model selling pressure on Mag 7 + Broadcom from the SpaceX, OpenAI, and Anthropic IPOs — mechanical index rebalancing plus substitution-driven proxy-premium compression.</p>
+  </article>
+
+  {{#if access}}
+    <div style="width:100%; max-width:1200px; margin:0 auto;">
+      <iframe
+        id="ipo-flows-frame"
+        data-app-src="/tools/ipo-flows/app/"
+        src="about:blank"
+        style="display:block;width:100%;height:1100px;border:0;overflow:hidden;"
+        scrolling="no"
+        loading="lazy"
+      ></iframe>
+    </div>
+    <script>
+      (() => {
+        const iframe = document.getElementById("ipo-flows-frame");
+        if (!iframe) return;
+        const appSrc = iframe.dataset.appSrc || "/tools/ipo-flows/app/";
+
+        const minHeight = 1100;
+        const setHeight = (height) => {
+          if (!Number.isFinite(height)) return;
+          iframe.style.height = `${Math.max(minHeight, Math.ceil(height))}px`;
+        };
+
+        setHeight(minHeight);
+        iframe.src = `${appSrc}?v=${Date.now()}`;
+
+        window.addEventListener("message", (event) => {
+          if (event.origin !== window.location.origin) return;
+          if (event.source !== iframe.contentWindow) return;
+          if (event.data?.type !== "resize") return;
+          setHeight(event.data.height);
+        });
+      })();
+    </script>
+  {{else}}
+    <article class="post ghost-content prose md:prose-lg prose-theme">
+      {{> pro-cta}}
+    </article>
+  {{/if}}
+{{/page}}

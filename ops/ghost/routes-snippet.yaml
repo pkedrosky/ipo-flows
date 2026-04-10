@@ -1,0 +1,4 @@
+# Add under `routes:` in Ghost routes.yaml
+/tools/ipo-flows/:
+  template: ipo-flows
+  data: page.ipo-flows
