@@ -114,31 +114,31 @@ export function ControlPanel({ params, onChange }: Props) {
         <h3 className="text-sm font-semibold uppercase tracking-widest text-[#64748b] mb-4">
           Float Assumption
         </h3>
-        <div className="max-w-xs">
-          <div className="flex justify-between items-baseline mb-1">
-            <span className="text-base font-semibold text-[#0f172a]">IPO float</span>
-            <span className="text-base font-bold text-[#0f172a]">{fmtPct(floatPct)}</span>
+        <div className="grid grid-cols-1 md:grid-cols-[max-content_1fr] gap-4 md:gap-6 items-start">
+          <div className="max-w-xs w-full">
+            <div className="flex justify-between items-baseline mb-1">
+              <span className="text-base font-semibold text-[#0f172a]">IPO float</span>
+              <span className="text-base font-bold text-[#0f172a]">{fmtPct(floatPct)}</span>
+            </div>
+            <input
+              type="range"
+              min={0.05}
+              max={0.40}
+              step={0.01}
+              value={floatPct}
+              onChange={(e) => set({ floatPct: parseFloat(e.target.value) })}
+              className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+              style={{
+                background: `linear-gradient(to right, #1f6fdb 0%, #1f6fdb ${floatPos * 100}%, #e2e8f0 ${floatPos * 100}%, #e2e8f0 100%)`,
+              }}
+            />
+            <div className="flex justify-between text-xs text-[#94a3b8] mt-0.5">
+              <span>5%</span>
+              <span>40%</span>
+            </div>
           </div>
-          <input
-            type="range"
-            min={0.05}
-            max={0.40}
-            step={0.01}
-            value={floatPct}
-            onChange={(e) => set({ floatPct: parseFloat(e.target.value) })}
-            className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
-            style={{
-              background: `linear-gradient(to right, #1f6fdb 0%, #1f6fdb ${floatPos * 100}%, #e2e8f0 ${floatPos * 100}%, #e2e8f0 100%)`,
-            }}
-          />
-          <div className="flex justify-between text-xs text-[#94a3b8] mt-0.5">
-            <span>5%</span>
-            <span>40%</span>
-          </div>
-          <p className="text-sm text-[#94a3b8] mt-2">
-            Share offered at listing. Scales index rebalancing pressure — larger float means more
-            free-float market cap and more forced selling by passive funds. Does not affect
-            substitution pressure, which is driven by the existence of the IPO, not its size.
+          <p className="text-sm text-[#94a3b8] max-w-md md:pt-7">
+            Higher float increases mechanical index-flow pressure; substitution pressure is unchanged.
           </p>
         </div>
       </div>
