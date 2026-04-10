@@ -154,9 +154,6 @@ export interface SimParams {
   valuations: Record<string, number>; // IPO id → $T
   timings: Record<string, IpoMonth>;  // IPO id → month
   floatPct: number;      // 0–1, share of each IPO offered at listing
-  mechIntensity: number; // 0–1, scales each stock's mech range (min→max)
-  subIntensity: number;  // 0–1, scales each stock's sub range (min→max)
-  excludedTickers: string[]; // stocks opted out of selling pressure
 }
 
 // Per-stock output

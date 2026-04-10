@@ -16,6 +16,9 @@ import {
 // ~1.5% daily vol → impact = DAILY_VOL_PCT × √(days of selling pressure)
 const DAILY_VOL_PCT = 1.5;
 
+// Mechanical and substitution intensity fixed at midpoint of each stock's range.
+const INTENSITY = 0.5;
+
 // Linear interpolation between min and max driven by intensity (0–1)
 function lerp(min: number, max: number, t: number): number {
   return min + (max - min) * t;
@@ -23,8 +26,7 @@ function lerp(min: number, max: number, t: number): number {
 
 export function useFlowSim(params: SimParams): SimResult {
   return useMemo(() => {
-    const { valuations, timings, floatPct, mechIntensity, subIntensity, excludedTickers } = params;
-    const excluded = new Set(excludedTickers);
+    const { valuations, timings, floatPct } = params;
 
     // Valuation scalar: mechanical pressure scales with total IPO valuation
     // relative to the baseline ($3.75T) the ranges were calibrated to.
@@ -41,38 +43,21 @@ export function useFlowSim(params: SimParams): SimResult {
 
     // Per-stock two-channel calculation
     const stockImpacts: StockImpact[] = STOCKS.map((stock) => {
-      // Excluded stocks absorb no outflow — their holders are assumed not to
-      // participate in the rotation. Total pressure decreases; no redistribution.
-      if (excluded.has(stock.ticker)) {
-        return {
-          ticker: stock.ticker,
-          name: stock.name,
-          color: stock.color,
-          proxyLabel: stock.proxyLabel,
-          mechB: 0,
-          subB: 0,
-          totalB: 0,
-          daysOfVolume: 0,
-          drawdownPct: 0,
-        };
-      }
-
       // Mechanical: index rebalancing, proportional to market cap.
-      // Scaled by where the user sits on the mechanical intensity slider,
-      // and by IPO valuation relative to baseline.
-      const mechB = lerp(stock.mechMin, stock.mechMax, mechIntensity) * valScalar * floatScalar;
+      // Scaled by IPO valuation and float relative to baseline.
+      const mechB = lerp(stock.mechMin, stock.mechMax, INTENSITY) * valScalar * floatScalar;
 
       // Substitution: proxy-premium compression.
-      // NOT scaled by valuation — this is a re-rating driven by the
-      // availability of direct ownership, not by float size.
-      const subB = lerp(stock.subMin, stock.subMax, subIntensity);
+      // NOT scaled by valuation or float — this is a re-rating driven by the
+      // availability of direct ownership, not by how much stock is offered.
+      const subB = lerp(stock.subMin, stock.subMax, INTENSITY);
 
       const totalB = mechB + subB;
       const daysOfVolume = totalB / stock.adv;
 
       // Square-root impact model for price drawdown.
-      // Note: substitution pressure is a re-rating, not a pure flow event,
-      // so this underestimates the true drawdown for substitution-heavy names.
+      // Note: understates the true drawdown for substitution-heavy names —
+      // re-rating events don't revert the way pure flow events do.
       const drawdownPct = DAILY_VOL_PCT * Math.sqrt(daysOfVolume);
 
       return {
@@ -111,9 +96,9 @@ export function useFlowSim(params: SimParams): SimResult {
     }));
 
     // Highlights
-    const byDays = [...stockImpacts].sort((a, b) => b.daysOfVolume - a.daysOfVolume);
+    const byDays     = [...stockImpacts].sort((a, b) => b.daysOfVolume - a.daysOfVolume);
     const byDrawdown = [...stockImpacts].sort((a, b) => b.drawdownPct - a.drawdownPct);
-    const bySub = [...stockImpacts].sort((a, b) => b.subB - a.subB);
+    const bySub      = [...stockImpacts].sort((a, b) => b.subB - a.subB);
 
     const peakMonthFlow = monthlyFlows.reduce((best, m) =>
       m.totalOutflowB > best.totalOutflowB ? m : best

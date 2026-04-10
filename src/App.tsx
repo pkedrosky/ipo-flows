@@ -39,19 +39,12 @@ function getInitialParams(): SimParams {
         : DEFAULT_TIMINGS[ipo.id];
   });
 
-  const floatPct      = parseFloat(sp.get("float") ?? "0.15");
-  const mechIntensity = parseFloat(sp.get("mech")  ?? "0.5");
-  const subIntensity  = parseFloat(sp.get("sub")   ?? "0.5");
-  const excludedRaw   = sp.get("excl");
-  const excludedTickers = excludedRaw ? excludedRaw.split(",").filter(Boolean) : [];
+  const floatPct = parseFloat(sp.get("float") ?? "0.15");
 
   return {
     valuations,
     timings,
-    floatPct:      isNaN(floatPct)      ? 0.15 : Math.max(0.05, Math.min(0.40, floatPct)),
-    mechIntensity: isNaN(mechIntensity) ? 0.5  : Math.max(0, Math.min(1, mechIntensity)),
-    subIntensity:  isNaN(subIntensity)  ? 0.5  : Math.max(0, Math.min(1, subIntensity)),
-    excludedTickers,
+    floatPct: isNaN(floatPct) ? 0.15 : Math.max(0.05, Math.min(0.40, floatPct)),
   };
 }
 
@@ -62,11 +55,6 @@ function paramsToSearch(params: SimParams): string {
     sp.set(`t_${ipo.id}`, params.timings[ipo.id]);
   });
   sp.set("float", params.floatPct.toFixed(2));
-  sp.set("mech",  params.mechIntensity.toFixed(2));
-  sp.set("sub",   params.subIntensity.toFixed(2));
-  if (params.excludedTickers.length > 0) {
-    sp.set("excl", params.excludedTickers.join(","));
-  }
   return sp.toString();
 }
 
@@ -100,9 +88,9 @@ export default function App() {
           IPO Flow Impact Simulator
         </h1>
         <p className="text-sm text-[#64748b] mt-1">
-          Two-channel model of selling pressure on Mag 7 + Broadcom from the
-          SpaceX, OpenAI, and Anthropic IPOs: mechanical index rebalancing plus
-          substitution-driven proxy-premium compression.
+          Estimated selling pressure on Mag 7 + Broadcom from the SpaceX, OpenAI,
+          and Anthropic IPOs — index rebalancing plus substitution-driven
+          proxy-premium compression.
         </p>
       </div>
 
@@ -113,10 +101,9 @@ export default function App() {
 
       <p className="text-[11px] text-[#94a3b8] pb-2">
         Sources: Bloomberg ADV estimates; company filings; paulkedrosky.com.
-        Mechanical ranges per index rebalancing analysis; substitution ranges
-        are judgment-based estimates. Drawdown via square-root market impact
-        (Almgren-Chriss); understates re-rating risk for substitution-heavy names.
-        Not investment advice.
+        Mechanical and substitution ranges are judgment-based; model uses midpoint
+        of each range. Drawdown via square-root market impact (Almgren-Chriss);
+        understates re-rating risk for substitution-heavy names. Not investment advice.
       </p>
     </div>
   );

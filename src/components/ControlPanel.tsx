@@ -1,4 +1,4 @@
-import { IPOS, IPO_MONTHS, STOCKS, type SimParams } from "../types";
+import { IPOS, IPO_MONTHS, type SimParams } from "../types";
 
 interface Props {
   params: SimParams;
@@ -13,62 +13,11 @@ function fmtPct(val: number) {
   return `${Math.round(val * 100)}%`;
 }
 
-function SliderRow({
-  label,
-  sublabel,
-  value,
-  min,
-  max,
-  step,
-  displayValue,
-  valueColor,
-  onChange,
-}: {
-  label: string;
-  sublabel?: string;
-  value: number;
-  min: number;
-  max: number;
-  step: number;
-  displayValue: string;
-  valueColor?: string;
-  onChange: (v: number) => void;
-}) {
-  return (
-    <div>
-      <div className="flex justify-between items-baseline mb-1">
-        <div>
-          <span className="text-sm font-semibold text-[#0f172a]">{label}</span>
-          {sublabel && (
-            <span className="text-xs text-[#94a3b8] ml-2">{sublabel}</span>
-          )}
-        </div>
-        <span
-          className="text-sm font-bold"
-          style={{ color: valueColor ?? "#0f172a" }}
-        >
-          {displayValue}
-        </span>
-      </div>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onChange={(e) => onChange(parseFloat(e.target.value))}
-        className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-[#e2e8f0]"
-      />
-      <div className="flex justify-between text-[10px] text-[#94a3b8] mt-0.5">
-        <span>Low</span>
-        <span>High</span>
-      </div>
-    </div>
-  );
-}
-
 export function ControlPanel({ params, onChange }: Props) {
   const set = (patch: Partial<SimParams>) => onChange({ ...params, ...patch });
+
+  const floatPct = params.floatPct;
+  const floatPos = (floatPct - 0.05) / (0.40 - 0.05);
 
   return (
     <div className="bg-white border border-[#d9e1ea] rounded-xl p-5 space-y-6">
@@ -160,88 +109,38 @@ export function ControlPanel({ params, onChange }: Props) {
         </div>
       </div>
 
-      {/* Pressure Assumptions */}
+      {/* Float */}
       <div>
         <h3 className="text-xs font-semibold uppercase tracking-widest text-[#64748b] mb-4">
-          Pressure Assumptions
+          Float Assumption
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <SliderRow
-            label="IPO float"
-            sublabel="share offered at listing"
-            value={params.floatPct}
+        <div className="max-w-xs">
+          <div className="flex justify-between items-baseline mb-1">
+            <span className="text-sm font-semibold text-[#0f172a]">IPO float</span>
+            <span className="text-sm font-bold text-[#0f172a]">{fmtPct(floatPct)}</span>
+          </div>
+          <input
+            type="range"
             min={0.05}
             max={0.40}
             step={0.01}
-            displayValue={fmtPct(params.floatPct)}
-            valueColor="#0f172a"
-            onChange={(v) => set({ floatPct: v })}
+            value={floatPct}
+            onChange={(e) => set({ floatPct: parseFloat(e.target.value) })}
+            className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+            style={{
+              background: `linear-gradient(to right, #1f6fdb 0%, #1f6fdb ${floatPos * 100}%, #e2e8f0 ${floatPos * 100}%, #e2e8f0 100%)`,
+            }}
           />
-          <SliderRow
-            label="Mechanical pressure"
-            sublabel="index rebalancing"
-            value={params.mechIntensity}
-            min={0}
-            max={1}
-            step={0.01}
-            displayValue={fmtPct(params.mechIntensity)}
-            valueColor="#1f6fdb"
-            onChange={(v) => set({ mechIntensity: v })}
-          />
-          <SliderRow
-            label="Substitution intensity"
-            sublabel="proxy-premium compression"
-            value={params.subIntensity}
-            min={0}
-            max={1}
-            step={0.01}
-            displayValue={fmtPct(params.subIntensity)}
-            valueColor="#ef4444"
-            onChange={(v) => set({ subIntensity: v })}
-          />
+          <div className="flex justify-between text-[10px] text-[#94a3b8] mt-0.5">
+            <span>5%</span>
+            <span>40%</span>
+          </div>
+          <p className="text-[11px] text-[#94a3b8] mt-2">
+            Share offered at listing. Scales index rebalancing pressure — larger float means more
+            free-float market cap and more forced selling by passive funds. Does not affect
+            substitution pressure, which is driven by the existence of the IPO, not its size.
+          </p>
         </div>
-        <p className="text-[11px] text-[#94a3b8] mt-3">
-          Float scales mechanical pressure proportionally (more shares = more index weight = more rebalancing).
-          Float does not affect substitution — re-rating occurs because the IPO exists, not because of float size.
-          Mechanical and substitution intensity: Low = range floor, High = ceiling, 50% = midpoint.
-        </p>
-      </div>
-
-      {/* Stock exclusions */}
-      <div>
-        <h3 className="text-xs font-semibold uppercase tracking-widest text-[#64748b] mb-3">
-          Include in Selling Pressure
-        </h3>
-        <div className="flex flex-wrap gap-2">
-          {STOCKS.map((stock) => {
-            const excluded = params.excludedTickers.includes(stock.ticker);
-            return (
-              <button
-                key={stock.ticker}
-                onClick={() => {
-                  const next = excluded
-                    ? params.excludedTickers.filter((t) => t !== stock.ticker)
-                    : [...params.excludedTickers, stock.ticker];
-                  set({ excludedTickers: next });
-                }}
-                className={`text-xs px-3 py-1 rounded-full border font-medium transition-colors ${
-                  excluded
-                    ? "text-[#94a3b8] border-[#e2e8f0] bg-white line-through"
-                    : "text-white border-transparent"
-                }`}
-                style={
-                  excluded ? {} : { backgroundColor: stock.color }
-                }
-              >
-                {stock.ticker}
-              </button>
-            );
-          })}
-        </div>
-        <p className="text-[11px] text-[#94a3b8] mt-2">
-          Deselect names whose holders are assumed not to participate in rotation.
-          Total pressure decreases — outflow is not redistributed.
-        </p>
       </div>
 
     </div>
