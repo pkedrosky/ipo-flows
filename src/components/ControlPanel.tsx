@@ -1,4 +1,4 @@
-import { IPOS, IPO_MONTHS, type SimParams } from "../types";
+import { IPOS, IPO_MONTHS, STOCKS, type SimParams } from "../types";
 
 interface Props {
   params: SimParams;
@@ -192,6 +192,43 @@ export function ControlPanel({ params, onChange }: Props) {
         <p className="text-[11px] text-[#94a3b8] mt-3">
           Low = floor of estimated range. High = ceiling. Default (50%) = midpoint.
           Mechanical scales with IPO valuation; substitution does not.
+        </p>
+      </div>
+
+      {/* Stock exclusions */}
+      <div>
+        <h3 className="text-xs font-semibold uppercase tracking-widest text-[#64748b] mb-3">
+          Include in Selling Pressure
+        </h3>
+        <div className="flex flex-wrap gap-2">
+          {STOCKS.map((stock) => {
+            const excluded = params.excludedTickers.includes(stock.ticker);
+            return (
+              <button
+                key={stock.ticker}
+                onClick={() => {
+                  const next = excluded
+                    ? params.excludedTickers.filter((t) => t !== stock.ticker)
+                    : [...params.excludedTickers, stock.ticker];
+                  set({ excludedTickers: next });
+                }}
+                className={`text-xs px-3 py-1 rounded-full border font-medium transition-colors ${
+                  excluded
+                    ? "text-[#94a3b8] border-[#e2e8f0] bg-white line-through"
+                    : "text-white border-transparent"
+                }`}
+                style={
+                  excluded ? {} : { backgroundColor: stock.color }
+                }
+              >
+                {stock.ticker}
+              </button>
+            );
+          })}
+        </div>
+        <p className="text-[11px] text-[#94a3b8] mt-2">
+          Deselect names whose holders are assumed not to participate in rotation.
+          Total pressure decreases — outflow is not redistributed.
         </p>
       </div>
 

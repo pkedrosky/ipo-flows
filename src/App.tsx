@@ -41,12 +41,15 @@ function getInitialParams(): SimParams {
 
   const mechIntensity = parseFloat(sp.get("mech") ?? "0.5");
   const subIntensity  = parseFloat(sp.get("sub")  ?? "0.5");
+  const excludedRaw   = sp.get("excl");
+  const excludedTickers = excludedRaw ? excludedRaw.split(",").filter(Boolean) : [];
 
   return {
     valuations,
     timings,
     mechIntensity: isNaN(mechIntensity) ? 0.5 : Math.max(0, Math.min(1, mechIntensity)),
     subIntensity:  isNaN(subIntensity)  ? 0.5 : Math.max(0, Math.min(1, subIntensity)),
+    excludedTickers,
   };
 }
 
@@ -58,6 +61,9 @@ function paramsToSearch(params: SimParams): string {
   });
   sp.set("mech", params.mechIntensity.toFixed(2));
   sp.set("sub",  params.subIntensity.toFixed(2));
+  if (params.excludedTickers.length > 0) {
+    sp.set("excl", params.excludedTickers.join(","));
+  }
   return sp.toString();
 }
 

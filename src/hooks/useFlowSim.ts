@@ -22,7 +22,8 @@ function lerp(min: number, max: number, t: number): number {
 
 export function useFlowSim(params: SimParams): SimResult {
   return useMemo(() => {
-    const { valuations, timings, mechIntensity, subIntensity } = params;
+    const { valuations, timings, mechIntensity, subIntensity, excludedTickers } = params;
+    const excluded = new Set(excludedTickers);
 
     // Valuation scalar: mechanical pressure scales with total IPO valuation
     // relative to the baseline ($3.75T) the ranges were calibrated to.
@@ -34,6 +35,22 @@ export function useFlowSim(params: SimParams): SimResult {
 
     // Per-stock two-channel calculation
     const stockImpacts: StockImpact[] = STOCKS.map((stock) => {
+      // Excluded stocks absorb no outflow — their holders are assumed not to
+      // participate in the rotation. Total pressure decreases; no redistribution.
+      if (excluded.has(stock.ticker)) {
+        return {
+          ticker: stock.ticker,
+          name: stock.name,
+          color: stock.color,
+          proxyLabel: stock.proxyLabel,
+          mechB: 0,
+          subB: 0,
+          totalB: 0,
+          daysOfVolume: 0,
+          drawdownPct: 0,
+        };
+      }
+
       // Mechanical: index rebalancing, proportional to market cap.
       // Scaled by where the user sits on the mechanical intensity slider,
       // and by IPO valuation relative to baseline.

@@ -7,7 +7,11 @@
       "Bash(gh repo:*)",
       "mcp__Claude_Preview__preview_start",
       "Bash(git add:*)",
-      "Bash(git commit -m 'Rebuild: two-channel model \\(mechanical + substitution\\):*)"
+      "Bash(git commit -m 'Rebuild: two-channel model \\(mechanical + substitution\\):*)",
+      "Bash(git push:*)",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "Bash(git commit -m 'Add per-stock exclusion toggles:*)"
     ]
   }
 }
