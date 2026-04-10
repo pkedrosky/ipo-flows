@@ -82,7 +82,7 @@ export default function App() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
-      <h1 className="text-xl font-bold text-[#0f172a]">
+      <h1 className="text-2xl font-bold text-[#0f172a]">
         IPO Flow Impact Simulator
       </h1>
 
@@ -90,7 +90,7 @@ export default function App() {
       <FlowCharts result={result} />
       <Insights result={result} params={params} />
 
-      <p className="text-[11px] text-[#94a3b8] pb-2">
+      <p className="text-sm text-[#94a3b8] pb-2">
         Drawdown estimates use square-root market impact (Almgren-Chriss) and
         understate re-rating risk for substitution-heavy names. Not investment advice.
       </p>

@@ -24,7 +24,7 @@ export function ControlPanel({ params, onChange }: Props) {
 
       {/* IPO Valuations */}
       <div>
-        <h3 className="text-xs font-semibold uppercase tracking-widest text-[#64748b] mb-4">
+        <h3 className="text-sm font-semibold uppercase tracking-widest text-[#64748b] mb-4">
           IPO Valuations
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -35,10 +35,10 @@ export function ControlPanel({ params, onChange }: Props) {
             return (
               <div key={ipo.id}>
                 <div className="flex justify-between items-baseline mb-1">
-                  <span className="text-sm font-semibold" style={{ color: ipo.color }}>
+                  <span className="text-base font-semibold" style={{ color: ipo.color }}>
                     {ipo.name}
                   </span>
-                  <span className="text-sm font-bold text-[#0f172a]">
+                  <span className="text-base font-bold text-[#0f172a]">
                     {fmt(val)}
                   </span>
                 </div>
@@ -61,7 +61,7 @@ export function ControlPanel({ params, onChange }: Props) {
                     background: `linear-gradient(to right, ${ipo.color} 0%, ${ipo.color} ${pct * 100}%, #e2e8f0 ${pct * 100}%, #e2e8f0 100%)`,
                   }}
                 />
-                <div className="flex justify-between text-[10px] text-[#94a3b8] mt-0.5">
+                <div className="flex justify-between text-xs text-[#94a3b8] mt-0.5">
                   <span>{fmt(ipo.minValuation)}</span>
                   <span>{fmt(ipo.maxValuation)}</span>
                 </div>
@@ -73,13 +73,13 @@ export function ControlPanel({ params, onChange }: Props) {
 
       {/* IPO Timing */}
       <div>
-        <h3 className="text-xs font-semibold uppercase tracking-widest text-[#64748b] mb-4">
+        <h3 className="text-sm font-semibold uppercase tracking-widest text-[#64748b] mb-4">
           IPO Timing (H2 2026)
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {IPOS.map((ipo) => (
             <div key={ipo.id}>
-              <label className="text-xs font-medium mb-1 block" style={{ color: ipo.color }}>
+              <label className="text-sm font-medium mb-1 block" style={{ color: ipo.color }}>
                 {ipo.name}
               </label>
               <div className="flex flex-wrap gap-1">
@@ -89,7 +89,7 @@ export function ControlPanel({ params, onChange }: Props) {
                     onClick={() =>
                       set({ timings: { ...params.timings, [ipo.id]: m } })
                     }
-                    className={`text-[11px] px-2 py-0.5 rounded border font-medium transition-colors ${
+                    className={`text-sm px-2 py-0.5 rounded border font-medium transition-colors ${
                       params.timings[ipo.id] === m
                         ? "text-white border-transparent"
                         : "text-[#64748b] border-[#d9e1ea] hover:border-[#94a3b8]"
@@ -111,13 +111,13 @@ export function ControlPanel({ params, onChange }: Props) {
 
       {/* Float */}
       <div>
-        <h3 className="text-xs font-semibold uppercase tracking-widest text-[#64748b] mb-4">
+        <h3 className="text-sm font-semibold uppercase tracking-widest text-[#64748b] mb-4">
           Float Assumption
         </h3>
         <div className="max-w-xs">
           <div className="flex justify-between items-baseline mb-1">
-            <span className="text-sm font-semibold text-[#0f172a]">IPO float</span>
-            <span className="text-sm font-bold text-[#0f172a]">{fmtPct(floatPct)}</span>
+            <span className="text-base font-semibold text-[#0f172a]">IPO float</span>
+            <span className="text-base font-bold text-[#0f172a]">{fmtPct(floatPct)}</span>
           </div>
           <input
             type="range"
@@ -131,11 +131,11 @@ export function ControlPanel({ params, onChange }: Props) {
               background: `linear-gradient(to right, #1f6fdb 0%, #1f6fdb ${floatPos * 100}%, #e2e8f0 ${floatPos * 100}%, #e2e8f0 100%)`,
             }}
           />
-          <div className="flex justify-between text-[10px] text-[#94a3b8] mt-0.5">
+          <div className="flex justify-between text-xs text-[#94a3b8] mt-0.5">
             <span>5%</span>
             <span>40%</span>
           </div>
-          <p className="text-[11px] text-[#94a3b8] mt-2">
+          <p className="text-sm text-[#94a3b8] mt-2">
             Share offered at listing. Scales index rebalancing pressure — larger float means more
             free-float market cap and more forced selling by passive funds. Does not affect
             substitution pressure, which is driven by the existence of the IPO, not its size.

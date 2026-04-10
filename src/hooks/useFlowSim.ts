@@ -41,6 +41,13 @@ export function useFlowSim(params: SimParams): SimResult {
     // regardless of how many shares are offered at listing.
     const floatScalar = floatPct / BASE_FLOAT_PCT;
 
+    // IPO valuation shares are used to allocate each stock's total outflow into
+    // the chosen listing months, so timing can affect peak pressure.
+    const ipoShares = IPOS.map((ipo) => {
+      const val = valuations[ipo.id] ?? ipo.defaultValuation;
+      return { id: ipo.id, share: val / totalValuation };
+    });
+
     // Per-stock two-channel calculation
     const stockImpacts: StockImpact[] = STOCKS.map((stock) => {
       // Mechanical: index rebalancing, proportional to market cap.
@@ -53,7 +60,17 @@ export function useFlowSim(params: SimParams): SimResult {
       const subB = lerp(stock.subMin, stock.subMax, INTENSITY);
 
       const totalB = mechB + subB;
-      const daysOfVolume = totalB / stock.adv;
+      // Timing-aware pressure: allocate each stock's outflow into IPO months
+      // and use peak-month pressure against ADV.
+      const stockMonthTotals: Partial<Record<IpoMonth, number>> = {};
+      for (const { id, share } of ipoShares) {
+        const month = timings[id];
+        stockMonthTotals[month] = (stockMonthTotals[month] ?? 0) + totalB * share;
+      }
+      const peakMonthOutflowB = Math.max(
+        ...IPO_MONTHS.map((month) => stockMonthTotals[month] ?? 0)
+      );
+      const daysOfVolume = peakMonthOutflowB / stock.adv;
 
       // Square-root impact model for price drawdown.
       // Note: understates the true drawdown for substitution-heavy names —
@@ -77,13 +94,8 @@ export function useFlowSim(params: SimParams): SimResult {
     const totalSubB = stockImpacts.reduce((s, st) => s + st.subB, 0);
     const totalOutflowB = totalMechB + totalSubB;
 
-    // Monthly cadence: distribute each IPO's proportional share of total
-    // outflow into its chosen month.
-    const ipoShares = IPOS.map((ipo) => {
-      const val = valuations[ipo.id] ?? ipo.defaultValuation;
-      return { id: ipo.id, share: val / totalValuation };
-    });
-
+    // Monthly cadence: distribute each IPO's proportional share of total outflow
+    // into its chosen month.
     const monthTotals: Partial<Record<IpoMonth, number>> = {};
     for (const { id, share } of ipoShares) {
       const month = timings[id];

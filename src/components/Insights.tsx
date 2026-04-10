@@ -37,10 +37,10 @@ export function Insights({ result, params }: Props) {
 
   return (
     <div className="bg-white border border-[#d9e1ea] rounded-xl p-5">
-      <h3 className="text-xs font-semibold uppercase tracking-widest text-[#64748b] mb-4">
+      <h3 className="text-sm font-semibold uppercase tracking-widest text-[#64748b] mb-4">
         What This Means
       </h3>
-      <ul className="space-y-3 text-sm text-[#374151] leading-relaxed">
+      <ul className="space-y-3 text-base text-[#374151] leading-relaxed">
 
         <li>
           <span className="font-semibold text-[#0f172a]">{mostImpactedByDays.ticker} is the most exposed.</span>{" "}

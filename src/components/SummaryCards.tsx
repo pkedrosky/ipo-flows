@@ -22,13 +22,13 @@ function Card({
 }) {
   return (
     <div className="bg-white border border-[#d9e1ea] rounded-xl p-4">
-      <div className="text-xs font-semibold uppercase tracking-widest text-[#64748b] mb-2">
+      <div className="text-sm font-semibold uppercase tracking-widest text-[#64748b] mb-2">
         {label}
       </div>
       <div className="text-2xl font-bold" style={{ color: valueColor }}>
         {value}
       </div>
-      {sub && <div className="text-xs text-[#94a3b8] mt-1">{sub}</div>}
+      {sub && <div className="text-sm text-[#94a3b8] mt-1">{sub}</div>}
     </div>
   );
 }
