@@ -40,68 +40,45 @@ export function Insights({ result, params }: Props) {
       <h3 className="text-xs font-semibold uppercase tracking-widest text-[#64748b] mb-4">
         What This Means
       </h3>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-sm text-[#374151] leading-relaxed">
+      <ul className="space-y-3 text-sm text-[#374151] leading-relaxed">
 
-        {/* Block 1: The dominant name */}
-        <div>
-          <div className="font-semibold text-[#0f172a] mb-1">
-            {mostImpactedByDays.ticker} Is the Biggest Problem
-          </div>
-          {mostImpactedByDays.daysOfVolume.toFixed(1)} days of selling pressure —
-          more than any other name. The driver is substitution:{" "}
-          {mostImpactedByDays.ticker} has been the market's shortcut for owning{" "}
-          {mostImpactedByDays.proxyLabel.toLowerCase()}. Once that's directly
-          purchasable, the premium evaporates.{" "}
+        <li>
+          <span className="font-semibold text-[#0f172a]">{mostImpactedByDays.ticker} is the most exposed.</span>{" "}
+          {mostImpactedByDays.daysOfVolume.toFixed(1)} days of selling pressure — more than any other name.
+          It has been the market's proxy for {mostImpactedByDays.proxyLabel.toLowerCase()};
+          once that's directly purchasable, the premium evaporates.
           {highestSubStock.ticker !== mostImpactedByDays.ticker && (
-            <>
-              {highestSubStock.ticker} carries the largest raw substitution
-              exposure at {fmtB(highestSubStock.subB)}.{" "}
-            </>
-          )}
-          {subShare}% of total estimated selling is substitution — the part
-          that doesn't reverse after the IPO closes.
-        </div>
+            <> {highestSubStock.ticker} carries the largest raw substitution exposure at {fmtB(highestSubStock.subB)}.</>
+          )}{" "}
+          {subShare}% of total estimated selling is substitution — the part that doesn't reverse after the IPO closes.
+        </li>
 
-        {/* Block 2: Drawdown floors */}
-        <div>
-          <div className="font-semibold text-[#0f172a] mb-1">
-            The Drawdown Numbers Are Floors
-          </div>
-          {msft.drawdownPct.toFixed(1)}% implied for MSFT, but that's just
-          the mechanical flow impact. It doesn't capture what happens to a
-          stock that was partly priced as an OpenAI proxy once OpenAI lists.
-          That repricing is structural — it doesn't bounce back once investors
-          can buy the real thing. Stocks with high substitution exposure
-          ({highestSubStock.ticker}, GOOGL, NVDA) are likely to underperform
+        <li>
+          <span className="font-semibold text-[#0f172a]">The drawdown numbers are floors.</span>{" "}
+          {msft.drawdownPct.toFixed(1)}% implied for MSFT doesn't capture what happens to a stock
+          priced partly as an OpenAI proxy once OpenAI lists. That repricing is structural.
+          High-substitution names ({highestSubStock.ticker}, GOOGL, NVDA) will likely underperform
           the model's output, not match it.
-        </div>
+        </li>
 
-        {/* Block 3: AVGO + timing */}
-        <div>
-          <div className="font-semibold text-[#0f172a] mb-1">
-            AVGO and the Stacking Risk
-          </div>
-          Broadcom trades $3B/day — the thinnest ADV in the group.
-          That produces {avgo.daysOfVolume.toFixed(1)}d of pressure from a
-          relatively small dollar outflow. Small position, outsized duration.{" "}
+        <li>
+          <span className="font-semibold text-[#0f172a]">AVGO is disproportionately fragile.</span>{" "}
+          $3B/day ADV — the thinnest in the group — produces {avgo.daysOfVolume.toFixed(1)}d of pressure
+          from a relatively small dollar outflow.{" "}
           {stackedMonths.length > 0 ? (
             <>
-              More urgently:{" "}
-              {stackedMonths.map(([m, c]) => `${c} IPOs land in ${m}`).join(", ")}.
-              When flows concentrate in a single month, the pressure on every
-              name multiplies — there's no natural spread to dampen it.
-              Stagger the timing and the peak drops sharply.
+              {stackedMonths.map(([m, c]) => `${c} IPOs land in ${m}`).join(", ")}, stacking flows
+              rather than spreading them. Stagger the timing and peak pressure drops sharply.
             </>
           ) : (
             <>
-              The current timing spreads IPOs across separate months, which
-              limits peak-month concentration. Any scenario where two IPOs
-              land in the same month changes the calculus significantly.
+              IPOs are currently spread across separate months. Stack two in the same month
+              and the pressure on every name multiplies.
             </>
           )}
-        </div>
+        </li>
 
-      </div>
+      </ul>
     </div>
   );
 }
