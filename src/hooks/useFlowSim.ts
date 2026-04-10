@@ -3,6 +3,7 @@ import {
   IPOS,
   STOCKS,
   IPO_MONTHS,
+  BASE_TOTAL_VALUATION,
   type SimParams,
   type SimResult,
   type StockImpact,
@@ -10,50 +11,75 @@ import {
   type IpoMonth,
 } from "../types";
 
-// Square-root market impact model.
-// Calibrated to large-cap empirics: ~1.5% daily vol for Mag7/Oracle names.
-// Impact = DAILY_VOL_PCT * sqrt(daysOfVolume)
-// This gives: 1 day → 1.5%, 4 days → 3%, 9 days → 4.5%, 16 days → 6%
+// Square-root market impact model, calibrated to large-cap empirics.
+// ~1.5% daily vol → impact = DAILY_VOL_PCT × √(days of selling pressure)
 const DAILY_VOL_PCT = 1.5;
+
+// Linear interpolation between min and max driven by intensity (0–1)
+function lerp(min: number, max: number, t: number): number {
+  return min + (max - min) * t;
+}
 
 export function useFlowSim(params: SimParams): SimResult {
   return useMemo(() => {
-    const { valuations, timings, floatPct, mag7Pct } = params;
+    const { valuations, timings, mechIntensity, subIntensity } = params;
 
-    // Step 1: compute float $ per IPO and total outflow from Mag7/Oracle
-    const totalFloatB = IPOS.reduce((sum, ipo) => {
-      const valT = valuations[ipo.id] ?? ipo.defaultValuation;
-      return sum + valT * 1000 * floatPct; // convert T→B
-    }, 0);
+    // Valuation scalar: mechanical pressure scales with total IPO valuation
+    // relative to the baseline ($3.75T) the ranges were calibrated to.
+    const totalValuation = IPOS.reduce(
+      (s, ipo) => s + (valuations[ipo.id] ?? ipo.defaultValuation),
+      0
+    );
+    const valScalar = totalValuation / BASE_TOTAL_VALUATION;
 
-    const totalOutflowB = totalFloatB * mag7Pct;
-
-    // Step 2: allocate outflow to each stock proportional to market cap
-    const totalMktCap = STOCKS.reduce((s, st) => s + st.marketCap, 0);
-
+    // Per-stock two-channel calculation
     const stockImpacts: StockImpact[] = STOCKS.map((stock) => {
-      const outflowB = totalOutflowB * (stock.marketCap / totalMktCap);
-      const daysOfVolume = outflowB / stock.adv;
+      // Mechanical: index rebalancing, proportional to market cap.
+      // Scaled by where the user sits on the mechanical intensity slider,
+      // and by IPO valuation relative to baseline.
+      const mechB = lerp(stock.mechMin, stock.mechMax, mechIntensity) * valScalar;
+
+      // Substitution: proxy-premium compression.
+      // NOT scaled by valuation — this is a re-rating driven by the
+      // availability of direct ownership, not by float size.
+      const subB = lerp(stock.subMin, stock.subMax, subIntensity);
+
+      const totalB = mechB + subB;
+      const daysOfVolume = totalB / stock.adv;
+
+      // Square-root impact model for price drawdown.
+      // Note: substitution pressure is a re-rating, not a pure flow event,
+      // so this underestimates the true drawdown for substitution-heavy names.
       const drawdownPct = DAILY_VOL_PCT * Math.sqrt(daysOfVolume);
 
       return {
         ticker: stock.ticker,
         name: stock.name,
         color: stock.color,
-        outflowB,
+        proxyLabel: stock.proxyLabel,
+        mechB,
+        subB,
+        totalB,
         daysOfVolume,
         drawdownPct,
       };
     });
 
-    // Step 3: monthly flow breakdown
+    const totalMechB = stockImpacts.reduce((s, st) => s + st.mechB, 0);
+    const totalSubB = stockImpacts.reduce((s, st) => s + st.subB, 0);
+    const totalOutflowB = totalMechB + totalSubB;
+
+    // Monthly cadence: distribute each IPO's proportional share of total
+    // outflow into its chosen month.
+    const ipoShares = IPOS.map((ipo) => {
+      const val = valuations[ipo.id] ?? ipo.defaultValuation;
+      return { id: ipo.id, share: val / totalValuation };
+    });
+
     const monthTotals: Partial<Record<IpoMonth, number>> = {};
-    for (const ipo of IPOS) {
-      const valT = valuations[ipo.id] ?? ipo.defaultValuation;
-      const floatB = valT * 1000 * floatPct;
-      const outflow = floatB * mag7Pct;
-      const month = timings[ipo.id];
-      monthTotals[month] = (monthTotals[month] ?? 0) + outflow;
+    for (const { id, share } of ipoShares) {
+      const month = timings[id];
+      monthTotals[month] = (monthTotals[month] ?? 0) + totalOutflowB * share;
     }
 
     const monthlyFlows: MonthlyFlow[] = IPO_MONTHS.map((month) => ({
@@ -61,25 +87,24 @@ export function useFlowSim(params: SimParams): SimResult {
       totalOutflowB: monthTotals[month] ?? 0,
     }));
 
-    // Step 4: derived highlights
-    const sortedByDays = [...stockImpacts].sort(
-      (a, b) => b.daysOfVolume - a.daysOfVolume
-    );
-    const sortedByDrawdown = [...stockImpacts].sort(
-      (a, b) => b.drawdownPct - a.drawdownPct
-    );
+    // Highlights
+    const byDays = [...stockImpacts].sort((a, b) => b.daysOfVolume - a.daysOfVolume);
+    const byDrawdown = [...stockImpacts].sort((a, b) => b.drawdownPct - a.drawdownPct);
+    const bySub = [...stockImpacts].sort((a, b) => b.subB - a.subB);
 
     const peakMonthFlow = monthlyFlows.reduce((best, m) =>
       m.totalOutflowB > best.totalOutflowB ? m : best
     );
 
     return {
-      totalFloatB,
+      totalMechB,
+      totalSubB,
       totalOutflowB,
       stockImpacts,
       monthlyFlows,
-      mostImpactedByDays: sortedByDays[0],
-      mostImpactedByDrawdown: sortedByDrawdown[0],
+      mostImpactedByDays: byDays[0],
+      mostImpactedByDrawdown: byDrawdown[0],
+      highestSubStock: bySub[0],
       peakMonth: peakMonthFlow.month,
       peakMonthOutflowB: peakMonthFlow.totalOutflowB,
     };

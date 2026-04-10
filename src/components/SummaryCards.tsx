@@ -34,29 +34,34 @@ function Card({
 }
 
 export function SummaryCards({ result }: Props) {
+  const mechShare = result.totalOutflowB > 0
+    ? Math.round((result.totalMechB / result.totalOutflowB) * 100)
+    : 0;
+
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
       <Card
-        label="Total Float"
-        value={fmtB(result.totalFloatB)}
-        sub="across all three IPOs"
-      />
-      <Card
-        label="Mag 7 + Oracle Outflow"
+        label="Total Selling Pressure"
         value={fmtB(result.totalOutflowB)}
-        sub="estimated selling pressure"
+        sub={`${fmtB(result.totalMechB)} mech · ${fmtB(result.totalSubB)} sub`}
         valueColor="#ef4444"
       />
       <Card
-        label="Most Pressure (Days)"
+        label="Substitution Share"
+        value={`${100 - mechShare}%`}
+        sub="of total — the re-rating channel"
+        valueColor="#b45309"
+      />
+      <Card
+        label="Most Pressured (Days)"
         value={`${result.mostImpactedByDays.daysOfVolume.toFixed(1)}d`}
-        sub={result.mostImpactedByDays.ticker}
+        sub={`${result.mostImpactedByDays.ticker} — ${result.mostImpactedByDays.proxyLabel}`}
         valueColor="#b45309"
       />
       <Card
         label="Peak Month"
         value={result.peakMonth}
-        sub={`${fmtB(result.peakMonthOutflowB)} outflow`}
+        sub={`${fmtB(result.peakMonthOutflowB)} concentrated`}
         valueColor="#1f6fdb"
       />
     </div>

@@ -3,7 +3,11 @@
     "allow": [
       "Bash(npm create:*)",
       "Bash(npm install:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(gh repo:*)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(git add:*)",
+      "Bash(git commit -m 'Rebuild: two-channel model \\(mechanical + substitution\\):*)"
     ]
   }
 }

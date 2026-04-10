@@ -16,36 +16,35 @@ function fmtPct(p: number) {
 }
 
 export function Insights({ result, params }: Props) {
-  const { mostImpactedByDays, mostImpactedByDrawdown, totalFloatB, totalOutflowB } = result;
+  const {
+    totalMechB,
+    totalSubB,
+    totalOutflowB,
+    mostImpactedByDays,
+    highestSubStock,
+    stockImpacts,
+  } = result;
 
-  const totalValuation = IPOS.reduce(
-    (s, ipo) => s + (params.valuations[ipo.id] ?? ipo.defaultValuation),
-    0
-  );
+  const subShare = totalOutflowB > 0
+    ? Math.round((totalSubB / totalOutflowB) * 100)
+    : 0;
 
-  // Classify pressure level
-  const maxDays = Math.max(...result.stockImpacts.map((s) => s.daysOfVolume));
-  const pressureLevel =
-    maxDays > 10
-      ? "severe"
-      : maxDays > 5
-      ? "significant"
-      : maxDays > 2
-      ? "moderate"
-      : "modest";
+  // Intensity characterization
+  const subLevel =
+    params.subIntensity > 0.75 ? "high" :
+    params.subIntensity > 0.4  ? "mid-range" : "conservative";
 
-  // Identify if any IPOs are stacked in the same month
+  // Stacking check
   const monthCounts: Record<string, number> = {};
   IPOS.forEach((ipo) => {
     const m = params.timings[ipo.id];
     monthCounts[m] = (monthCounts[m] ?? 0) + 1;
   });
   const stackedMonths = Object.entries(monthCounts).filter(([, c]) => c > 1);
-  const hasStacking = stackedMonths.length > 0;
 
-  // Oracle note: small ADV makes it disproportionately affected
-  const oracle = result.stockImpacts.find((s) => s.ticker === "ORCL")!;
-  const oracleIsWorst = mostImpactedByDays.ticker === "ORCL";
+  // AVGO note: thin ADV makes it a disproportionate days story
+  const avgo = stockImpacts.find((s) => s.ticker === "AVGO")!;
+  const msft = stockImpacts.find((s) => s.ticker === "MSFT")!;
 
   return (
     <div className="bg-white border border-[#d9e1ea] rounded-xl p-5">
@@ -53,69 +52,63 @@ export function Insights({ result, params }: Props) {
         What This Means
       </h3>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-sm text-[#374151] leading-relaxed">
-        {/* Block 1: Overall flow narrative */}
+
+        {/* Block 1: Two-channel overview */}
         <div>
-          <div className="font-semibold text-[#0f172a] mb-1">Flow Overview</div>
-          At these assumptions, the three IPOs together represent{" "}
-          <strong>{fmtB(totalValuation * 1000)}</strong> in combined valuation
-          with a <strong>{Math.round(params.floatPct * 100)}% float</strong>,
-          producing <strong>{fmtB(totalFloatB)}</strong> in total new equity to
-          absorb. Of that,{" "}
-          <strong>{Math.round(params.mag7Pct * 100)}%</strong> —{" "}
-          <strong>{fmtB(totalOutflowB)}</strong> — is assumed to come from
-          rotation out of Mag 7 and Oracle.
+          <div className="font-semibold text-[#0f172a] mb-1">Two Channels</div>
+          At these assumptions, total estimated selling pressure is{" "}
+          <strong>{fmtB(totalOutflowB)}</strong> — {fmtB(totalMechB)} mechanical
+          and {fmtB(totalSubB)} from substitution. The substitution channel
+          accounts for <strong>{subShare}%</strong> of the total and is the
+          dominant driver. That ratio matters: mechanical selling is a one-time,
+          well-telegraphed event that markets will front-run and absorb.
+          Substitution pressure is structural — it doesn't reverse after the
+          IPO is placed.
         </div>
 
-        {/* Block 2: Per-stock pressure */}
+        {/* Block 2: Re-rating vs. flow */}
         <div>
-          <div className="font-semibold text-[#0f172a] mb-1">
-            Stock-Level Pressure
-          </div>
-          Selling pressure is {pressureLevel} under these assumptions.{" "}
-          <strong>{mostImpactedByDays.ticker}</strong> faces the most days of
-          flow ({mostImpactedByDays.daysOfVolume.toFixed(1)}d) while{" "}
-          <strong>{mostImpactedByDrawdown.ticker}</strong> sees the largest
-          implied drawdown ({fmtPct(mostImpactedByDrawdown.drawdownPct)}).{" "}
-          {!oracleIsWorst && (
-            <>
-              Despite a smaller absolute outflow, Oracle's thin ADV of{" "}
-              <strong>$3B/day</strong> leaves it exposed to{" "}
-              <strong>{oracle.daysOfVolume.toFixed(1)} days</strong> of
-              pressure — disproportionate to its market cap weight.
-            </>
-          )}
-          {oracleIsWorst && (
-            <>
-              Oracle's thin ADV of <strong>$3B/day</strong> makes it the most
-              flow-stressed name despite its small cap weight.
-            </>
-          )}
+          <div className="font-semibold text-[#0f172a] mb-1">Re-rating, Not Just Flows</div>
+          <strong>{highestSubStock.ticker}</strong> faces the largest
+          substitution exposure ({fmtB(highestSubStock.subB)}) as the
+          direct proxy for {highestSubStock.proxyLabel.toLowerCase()}. The
+          drawdown model ({fmtPct(msft.drawdownPct)} implied for MSFT) almost
+          certainly understates the risk for high-substitution names — the
+          square-root model captures flow impact, not multiple compression.
+          A 30x earnings stock that was partly pricing OpenAI optionality
+          doesn't re-rate back once that optionality is directly purchasable.
         </div>
 
-        {/* Block 3: Timing and model notes */}
+        {/* Block 3: Concentration and timing */}
         <div>
           <div className="font-semibold text-[#0f172a] mb-1">
-            Timing & Model Notes
+            Concentration Risk
           </div>
-          {hasStacking ? (
+          Broadcom's thin ADV ($3B/day) leaves it facing{" "}
+          <strong>{avgo.daysOfVolume.toFixed(1)} days</strong> of pressure
+          despite its smaller dollar outflow — disproportionate relative to its
+          weight. {mostImpactedByDays.ticker !== "AVGO" && (
             <>
-              With{" "}
-              {stackedMonths.map(([m, c]) => `${c} IPOs in ${m}`).join(" and ")}
-              , flows concentrate rather than spread — compounding pressure in{" "}
-              <strong>{result.peakMonth}</strong>. Staggering IPOs across
-              separate months would reduce peak-month strain.{" "}
+              {mostImpactedByDays.ticker} carries the most days overall at{" "}
+              <strong>{mostImpactedByDays.daysOfVolume.toFixed(1)}d</strong>.{" "}
+            </>
+          )}
+          {stackedMonths.length > 0 ? (
+            <>
+              With {stackedMonths.map(([m, c]) => `${c} IPOs in ${m}`).join(" and ")},
+              flows concentrate rather than spread — compounding pressure in a
+              narrow window. The {subLevel} substitution assumption used here
+              is the key uncertainty in the total.
             </>
           ) : (
             <>
-              IPOs are spread across different months, distributing selling
-              pressure rather than concentrating it.{" "}
+              IPOs are spread across separate months, reducing peak-month
+              concentration. The {subLevel} substitution assumption remains
+              the dominant uncertainty.
             </>
           )}
-          Drawdown estimates use a square-root market impact model calibrated
-          to large-cap daily volatility (~1.5%). Actual impact depends on
-          market conditions, passive vs. active fund mix, and whether index
-          inclusion absorbs demand before heavy selling begins.
         </div>
+
       </div>
     </div>
   );

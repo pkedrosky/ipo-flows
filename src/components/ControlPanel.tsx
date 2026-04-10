@@ -5,20 +5,74 @@ interface Props {
   onChange: (params: SimParams) => void;
 }
 
-function fmt(val: number, decimals = 2) {
-  return `$${val.toFixed(decimals)}T`;
+function fmt(val: number) {
+  return `$${val.toFixed(2)}T`;
 }
 
 function fmtPct(val: number) {
   return `${Math.round(val * 100)}%`;
 }
 
+function SliderRow({
+  label,
+  sublabel,
+  value,
+  min,
+  max,
+  step,
+  displayValue,
+  valueColor,
+  onChange,
+}: {
+  label: string;
+  sublabel?: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  displayValue: string;
+  valueColor?: string;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div>
+      <div className="flex justify-between items-baseline mb-1">
+        <div>
+          <span className="text-sm font-semibold text-[#0f172a]">{label}</span>
+          {sublabel && (
+            <span className="text-xs text-[#94a3b8] ml-2">{sublabel}</span>
+          )}
+        </div>
+        <span
+          className="text-sm font-bold"
+          style={{ color: valueColor ?? "#0f172a" }}
+        >
+          {displayValue}
+        </span>
+      </div>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(parseFloat(e.target.value))}
+        className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-[#e2e8f0]"
+      />
+      <div className="flex justify-between text-[10px] text-[#94a3b8] mt-0.5">
+        <span>Low</span>
+        <span>High</span>
+      </div>
+    </div>
+  );
+}
+
 export function ControlPanel({ params, onChange }: Props) {
-  const set = (patch: Partial<SimParams>) =>
-    onChange({ ...params, ...patch });
+  const set = (patch: Partial<SimParams>) => onChange({ ...params, ...patch });
 
   return (
     <div className="bg-white border border-[#d9e1ea] rounded-xl p-5 space-y-6">
+
       {/* IPO Valuations */}
       <div>
         <h3 className="text-xs font-semibold uppercase tracking-widest text-[#64748b] mb-4">
@@ -27,14 +81,12 @@ export function ControlPanel({ params, onChange }: Props) {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           {IPOS.map((ipo) => {
             const val = params.valuations[ipo.id] ?? ipo.defaultValuation;
-            const step = Math.round((ipo.maxValuation - ipo.minValuation) / 20 * 100) / 100;
+            const pct =
+              (val - ipo.minValuation) / (ipo.maxValuation - ipo.minValuation);
             return (
               <div key={ipo.id}>
                 <div className="flex justify-between items-baseline mb-1">
-                  <span
-                    className="text-sm font-semibold"
-                    style={{ color: ipo.color }}
-                  >
+                  <span className="text-sm font-semibold" style={{ color: ipo.color }}>
                     {ipo.name}
                   </span>
                   <span className="text-sm font-bold text-[#0f172a]">
@@ -45,7 +97,7 @@ export function ControlPanel({ params, onChange }: Props) {
                   type="range"
                   min={ipo.minValuation}
                   max={ipo.maxValuation}
-                  step={step || 0.01}
+                  step={0.01}
                   value={val}
                   onChange={(e) =>
                     set({
@@ -57,15 +109,7 @@ export function ControlPanel({ params, onChange }: Props) {
                   }
                   className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
                   style={{
-                    background: `linear-gradient(to right, ${ipo.color} 0%, ${ipo.color} ${
-                      ((val - ipo.minValuation) /
-                        (ipo.maxValuation - ipo.minValuation)) *
-                      100
-                    }%, #e2e8f0 ${
-                      ((val - ipo.minValuation) /
-                        (ipo.maxValuation - ipo.minValuation)) *
-                      100
-                    }%, #e2e8f0 100%)`,
+                    background: `linear-gradient(to right, ${ipo.color} 0%, ${ipo.color} ${pct * 100}%, #e2e8f0 ${pct * 100}%, #e2e8f0 100%)`,
                   }}
                 />
                 <div className="flex justify-between text-[10px] text-[#94a3b8] mt-0.5">
@@ -86,10 +130,7 @@ export function ControlPanel({ params, onChange }: Props) {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {IPOS.map((ipo) => (
             <div key={ipo.id}>
-              <label
-                className="text-xs font-medium mb-1 block"
-                style={{ color: ipo.color }}
-              >
+              <label className="text-xs font-medium mb-1 block" style={{ color: ipo.color }}>
                 {ipo.name}
               </label>
               <div className="flex flex-wrap gap-1">
@@ -97,9 +138,7 @@ export function ControlPanel({ params, onChange }: Props) {
                   <button
                     key={m}
                     onClick={() =>
-                      set({
-                        timings: { ...params.timings, [ipo.id]: m },
-                      })
+                      set({ timings: { ...params.timings, [ipo.id]: m } })
                     }
                     className={`text-[11px] px-2 py-0.5 rounded border font-medium transition-colors ${
                       params.timings[ipo.id] === m
@@ -121,56 +160,41 @@ export function ControlPanel({ params, onChange }: Props) {
         </div>
       </div>
 
-      {/* Float % and Mag7 Allocation */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <div>
-          <div className="flex justify-between items-baseline mb-1">
-            <span className="text-sm font-semibold text-[#0f172a]">
-              IPO Float
-            </span>
-            <span className="text-sm font-bold text-[#1f6fdb]">
-              {fmtPct(params.floatPct)}
-            </span>
-          </div>
-          <input
-            type="range"
-            min={0.05}
-            max={0.40}
-            step={0.01}
-            value={params.floatPct}
-            onChange={(e) => set({ floatPct: parseFloat(e.target.value) })}
-            className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-[#e2e8f0]"
-          />
-          <div className="flex justify-between text-[10px] text-[#94a3b8] mt-0.5">
-            <span>5%</span>
-            <span>40%</span>
-          </div>
-        </div>
-
-        <div>
-          <div className="flex justify-between items-baseline mb-1">
-            <span className="text-sm font-semibold text-[#0f172a]">
-              Funded by Mag 7 + Oracle selling
-            </span>
-            <span className="text-sm font-bold text-[#ef4444]">
-              {fmtPct(params.mag7Pct)}
-            </span>
-          </div>
-          <input
-            type="range"
+      {/* Pressure Assumptions */}
+      <div>
+        <h3 className="text-xs font-semibold uppercase tracking-widest text-[#64748b] mb-4">
+          Pressure Assumptions
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <SliderRow
+            label="Mechanical pressure"
+            sublabel="index rebalancing"
+            value={params.mechIntensity}
             min={0}
-            max={0.80}
+            max={1}
             step={0.01}
-            value={params.mag7Pct}
-            onChange={(e) => set({ mag7Pct: parseFloat(e.target.value) })}
-            className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-[#e2e8f0]"
+            displayValue={fmtPct(params.mechIntensity)}
+            valueColor="#1f6fdb"
+            onChange={(v) => set({ mechIntensity: v })}
           />
-          <div className="flex justify-between text-[10px] text-[#94a3b8] mt-0.5">
-            <span>0%</span>
-            <span>80%</span>
-          </div>
+          <SliderRow
+            label="Substitution intensity"
+            sublabel="proxy-premium compression"
+            value={params.subIntensity}
+            min={0}
+            max={1}
+            step={0.01}
+            displayValue={fmtPct(params.subIntensity)}
+            valueColor="#ef4444"
+            onChange={(v) => set({ subIntensity: v })}
+          />
         </div>
+        <p className="text-[11px] text-[#94a3b8] mt-3">
+          Low = floor of estimated range. High = ceiling. Default (50%) = midpoint.
+          Mechanical scales with IPO valuation; substitution does not.
+        </p>
       </div>
+
     </div>
   );
 }
