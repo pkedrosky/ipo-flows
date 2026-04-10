@@ -3,7 +3,6 @@ import { IPOS, type SimParams, type IpoMonth } from "./types";
 import { useFlowSim } from "./hooks/useFlowSim";
 import { ControlPanel } from "./components/ControlPanel";
 import { FlowCharts } from "./components/FlowCharts";
-import { SummaryCards } from "./components/SummaryCards";
 import { Insights } from "./components/Insights";
 
 const VALID_MONTHS: IpoMonth[] = [
@@ -83,27 +82,17 @@ export default function App() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
-      <div>
-        <h1 className="text-xl font-bold text-[#0f172a]">
-          IPO Flow Impact Simulator
-        </h1>
-        <p className="text-sm text-[#64748b] mt-1">
-          Estimated selling pressure on Mag 7 + Broadcom from the SpaceX, OpenAI,
-          and Anthropic IPOs — index rebalancing plus substitution-driven
-          proxy-premium compression.
-        </p>
-      </div>
+      <h1 className="text-xl font-bold text-[#0f172a]">
+        IPO Flow Impact Simulator
+      </h1>
 
       <ControlPanel params={params} onChange={setParams} />
-      <SummaryCards result={result} />
       <FlowCharts result={result} />
       <Insights result={result} params={params} />
 
       <p className="text-[11px] text-[#94a3b8] pb-2">
-        Sources: Bloomberg ADV estimates; company filings; paulkedrosky.com.
-        Mechanical and substitution ranges are judgment-based; model uses midpoint
-        of each range. Drawdown via square-root market impact (Almgren-Chriss);
-        understates re-rating risk for substitution-heavy names. Not investment advice.
+        Drawdown estimates use square-root market impact (Almgren-Chriss) and
+        understate re-rating risk for substitution-heavy names. Not investment advice.
       </p>
     </div>
   );

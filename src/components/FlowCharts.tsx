@@ -14,11 +14,6 @@ interface Props {
   result: SimResult;
 }
 
-function fmtB(b: number) {
-  if (b >= 1000) return `$${(b / 1000).toFixed(2)}T`;
-  return `$${b.toFixed(1)}B`;
-}
-
 // Custom tooltip for days/drawdown charts
 function SimpleTooltip({
   active,
@@ -62,11 +57,6 @@ export function FlowCharts({ result }: Props) {
     ticker: s.ticker,
     value: parseFloat(s.drawdownPct.toFixed(2)),
     color: s.color,
-  }));
-
-  const monthlyData = result.monthlyFlows.map((m) => ({
-    month: m.month.slice(0, 3),
-    value: parseFloat(m.totalOutflowB.toFixed(1)),
   }));
 
   return (
@@ -119,29 +109,6 @@ export function FlowCharts({ result }: Props) {
                 <Cell key={i} fill={d.color} opacity={0.85} />
               ))}
             </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* Monthly cadence */}
-      <div className="bg-white border border-[#d9e1ea] rounded-xl p-5">
-        <h3 className="text-sm font-semibold text-[#0f172a] mb-1">
-          Outflow Cadence by Month
-        </h3>
-        <p className="text-xs text-[#64748b] mb-4">
-          IPOs in the same month stack flows. Staggering reduces peak-month strain.
-        </p>
-        <ResponsiveContainer width="100%" height={180}>
-          <BarChart data={monthlyData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-            <CartesianGrid vertical={false} stroke="#f1f5f9" />
-            <XAxis dataKey="month" tick={{ fontSize: 12, fill: "#64748b" }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false}
-              tickFormatter={(v: number) => fmtB(v)} width={52} />
-            <Tooltip
-              formatter={(v: unknown) => [fmtB(v as number), "Outflow"]}
-              contentStyle={{ fontSize: 12, borderColor: "#d9e1ea", borderRadius: 8 }}
-            />
-            <Bar dataKey="value" fill="#1f6fdb" radius={[4, 4, 0, 0]} opacity={0.8} />
           </BarChart>
         </ResponsiveContainer>
       </div>
