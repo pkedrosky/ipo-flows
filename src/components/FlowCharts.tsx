@@ -36,7 +36,9 @@ function SimpleTooltip({
       <div className="font-semibold text-[#0f172a]">{String(label)}</div>
       {proxy && <div className="text-[10px] text-[#94a3b8] mb-1">{proxy}</div>}
       <div className="text-[#64748b]">
-        {(payload[0].value as number).toFixed(2)}{unit}
+        {(payload[0].value as number) < 0
+          ? `−${Math.abs(payload[0].value as number).toFixed(2)}${unit}`
+          : `${(payload[0].value as number).toFixed(2)}${unit}`}
       </div>
     </div>
   );
@@ -55,7 +57,7 @@ export function FlowCharts({ result }: Props) {
 
   const drawdownData = result.stockImpacts.map((s) => ({
     ticker: s.ticker,
-    value: parseFloat(s.drawdownPct.toFixed(2)),
+    value: parseFloat((-s.drawdownPct).toFixed(2)),
     color: s.color,
   }));
 
@@ -104,7 +106,7 @@ export function FlowCharts({ result }: Props) {
             <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false}
               tickFormatter={(v: number) => `${v.toFixed(1)}%`} width={40} />
             <Tooltip content={(props) => <SimpleTooltip {...props} unit="%" proxyLabels={proxyLabels} />} />
-            <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+            <Bar dataKey="value" radius={[0, 0, 4, 4]}>
               {drawdownData.map((d, i) => (
                 <Cell key={i} fill={d.color} opacity={0.85} />
               ))}
