@@ -165,7 +165,18 @@ export function ControlPanel({ params, onChange }: Props) {
         <h3 className="text-xs font-semibold uppercase tracking-widest text-[#64748b] mb-4">
           Pressure Assumptions
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <SliderRow
+            label="IPO float"
+            sublabel="share offered at listing"
+            value={params.floatPct}
+            min={0.05}
+            max={0.40}
+            step={0.01}
+            displayValue={fmtPct(params.floatPct)}
+            valueColor="#0f172a"
+            onChange={(v) => set({ floatPct: v })}
+          />
           <SliderRow
             label="Mechanical pressure"
             sublabel="index rebalancing"
@@ -190,8 +201,9 @@ export function ControlPanel({ params, onChange }: Props) {
           />
         </div>
         <p className="text-[11px] text-[#94a3b8] mt-3">
-          Low = floor of estimated range. High = ceiling. Default (50%) = midpoint.
-          Mechanical scales with IPO valuation; substitution does not.
+          Float scales mechanical pressure proportionally (more shares = more index weight = more rebalancing).
+          Float does not affect substitution — re-rating occurs because the IPO exists, not because of float size.
+          Mechanical and substitution intensity: Low = range floor, High = ceiling, 50% = midpoint.
         </p>
       </div>
 

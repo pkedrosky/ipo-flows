@@ -39,16 +39,18 @@ function getInitialParams(): SimParams {
         : DEFAULT_TIMINGS[ipo.id];
   });
 
-  const mechIntensity = parseFloat(sp.get("mech") ?? "0.5");
-  const subIntensity  = parseFloat(sp.get("sub")  ?? "0.5");
+  const floatPct      = parseFloat(sp.get("float") ?? "0.15");
+  const mechIntensity = parseFloat(sp.get("mech")  ?? "0.5");
+  const subIntensity  = parseFloat(sp.get("sub")   ?? "0.5");
   const excludedRaw   = sp.get("excl");
   const excludedTickers = excludedRaw ? excludedRaw.split(",").filter(Boolean) : [];
 
   return {
     valuations,
     timings,
-    mechIntensity: isNaN(mechIntensity) ? 0.5 : Math.max(0, Math.min(1, mechIntensity)),
-    subIntensity:  isNaN(subIntensity)  ? 0.5 : Math.max(0, Math.min(1, subIntensity)),
+    floatPct:      isNaN(floatPct)      ? 0.15 : Math.max(0.05, Math.min(0.40, floatPct)),
+    mechIntensity: isNaN(mechIntensity) ? 0.5  : Math.max(0, Math.min(1, mechIntensity)),
+    subIntensity:  isNaN(subIntensity)  ? 0.5  : Math.max(0, Math.min(1, subIntensity)),
     excludedTickers,
   };
 }
@@ -59,8 +61,9 @@ function paramsToSearch(params: SimParams): string {
     sp.set(ipo.id, (params.valuations[ipo.id] ?? ipo.defaultValuation).toFixed(2));
     sp.set(`t_${ipo.id}`, params.timings[ipo.id]);
   });
-  sp.set("mech", params.mechIntensity.toFixed(2));
-  sp.set("sub",  params.subIntensity.toFixed(2));
+  sp.set("float", params.floatPct.toFixed(2));
+  sp.set("mech",  params.mechIntensity.toFixed(2));
+  sp.set("sub",   params.subIntensity.toFixed(2));
   if (params.excludedTickers.length > 0) {
     sp.set("excl", params.excludedTickers.join(","));
   }

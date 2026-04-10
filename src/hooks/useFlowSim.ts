@@ -4,6 +4,7 @@ import {
   STOCKS,
   IPO_MONTHS,
   BASE_TOTAL_VALUATION,
+  BASE_FLOAT_PCT,
   type SimParams,
   type SimResult,
   type StockImpact,
@@ -22,7 +23,7 @@ function lerp(min: number, max: number, t: number): number {
 
 export function useFlowSim(params: SimParams): SimResult {
   return useMemo(() => {
-    const { valuations, timings, mechIntensity, subIntensity, excludedTickers } = params;
+    const { valuations, timings, floatPct, mechIntensity, subIntensity, excludedTickers } = params;
     const excluded = new Set(excludedTickers);
 
     // Valuation scalar: mechanical pressure scales with total IPO valuation
@@ -32,6 +33,11 @@ export function useFlowSim(params: SimParams): SimResult {
       0
     );
     const valScalar = totalValuation / BASE_TOTAL_VALUATION;
+
+    // Float scalar: mechanical pressure scales proportionally with float %.
+    // Substitution does not — re-rating happens because the IPO exists,
+    // regardless of how many shares are offered at listing.
+    const floatScalar = floatPct / BASE_FLOAT_PCT;
 
     // Per-stock two-channel calculation
     const stockImpacts: StockImpact[] = STOCKS.map((stock) => {
@@ -54,7 +60,7 @@ export function useFlowSim(params: SimParams): SimResult {
       // Mechanical: index rebalancing, proportional to market cap.
       // Scaled by where the user sits on the mechanical intensity slider,
       // and by IPO valuation relative to baseline.
-      const mechB = lerp(stock.mechMin, stock.mechMax, mechIntensity) * valScalar;
+      const mechB = lerp(stock.mechMin, stock.mechMax, mechIntensity) * valScalar * floatScalar;
 
       // Substitution: proxy-premium compression.
       // NOT scaled by valuation — this is a re-rating driven by the

@@ -12,7 +12,9 @@
       "Skill(update-config)",
       "Skill(update-config:*)",
       "Bash(git commit -m 'Add per-stock exclusion toggles:*)",
-      "Bash(git commit -m 'Add ops: nginx config, Ghost template, deploy runbook:*)"
+      "Bash(git commit -m 'Add ops: nginx config, Ghost template, deploy runbook:*)",
+      "Bash(ssh pk:*)",
+      "Bash(git commit -m 'Add float % slider to mechanical channel:*)"
     ]
   }
 }

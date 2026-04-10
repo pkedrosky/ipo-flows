@@ -11,6 +11,9 @@ export interface IPO {
 // Base total valuation the substitution ranges are calibrated to
 export const BASE_TOTAL_VALUATION = 3.75; // $T
 
+// Float % the mechanical ranges are calibrated to
+export const BASE_FLOAT_PCT = 0.15;
+
 export const IPOS: IPO[] = [
   {
     id: "spacex",
@@ -150,6 +153,7 @@ export const STOCKS: Stock[] = [
 export interface SimParams {
   valuations: Record<string, number>; // IPO id → $T
   timings: Record<string, IpoMonth>;  // IPO id → month
+  floatPct: number;      // 0–1, share of each IPO offered at listing
   mechIntensity: number; // 0–1, scales each stock's mech range (min→max)
   subIntensity: number;  // 0–1, scales each stock's sub range (min→max)
   excludedTickers: string[]; // stocks opted out of selling pressure
