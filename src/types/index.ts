@@ -20,7 +20,7 @@ export const IPOS: IPO[] = [
     name: "SpaceX",
     defaultValuation: 2.0,
     minValuation: 1.4,
-    maxValuation: 2.6,
+    maxValuation: 3.0,
     color: "#1a1a2e",
   },
   {
@@ -28,7 +28,7 @@ export const IPOS: IPO[] = [
     name: "OpenAI",
     defaultValuation: 0.75,
     minValuation: 0.53,
-    maxValuation: 0.98,
+    maxValuation: 3.0,
     color: "#10a37f",
   },
   {
@@ -36,7 +36,7 @@ export const IPOS: IPO[] = [
     name: "Anthropic",
     defaultValuation: 1.0,
     minValuation: 0.7,
-    maxValuation: 1.3,
+    maxValuation: 3.0,
     color: "#c96442",
   },
 ];
