@@ -23,7 +23,7 @@ const INTENSITY = 0.7;
 
 // Market-congestion uplift applied to peak-month pressure.
 // Captures second-order spillover (ETF/rebalance crowding) without adding UI knobs.
-const CONGESTION_UPLIFT = 1.25;
+const CONGESTION_UPLIFT = 1.6;
 
 // Linear interpolation between min and max driven by intensity (0–1)
 function lerp(min: number, max: number, t: number): number {
