@@ -12,12 +12,18 @@ import {
   type IpoMonth,
 } from "../types";
 
-// Square-root market impact model, calibrated to large-cap empirics.
-// ~1.5% daily vol → impact = DAILY_VOL_PCT × √(days of selling pressure)
-const DAILY_VOL_PCT = 1.5;
+// Square-root market impact model, calibrated less conservatively to
+// reflect crowded positioning and correlated de-risking during mega-IPO windows.
+// impact = DAILY_VOL_PCT × √(effective days of selling pressure)
+const DAILY_VOL_PCT = 2.0;
 
-// Mechanical and substitution intensity fixed at midpoint of each stock's range.
-const INTENSITY = 0.5;
+// Mechanical and substitution intensity fixed above midpoint to avoid
+// systematically understating pressure in proxy-heavy names.
+const INTENSITY = 0.7;
+
+// Market-congestion uplift applied to peak-month pressure.
+// Captures second-order spillover (ETF/rebalance crowding) without adding UI knobs.
+const CONGESTION_UPLIFT = 1.25;
 
 // Linear interpolation between min and max driven by intensity (0–1)
 function lerp(min: number, max: number, t: number): number {
@@ -70,7 +76,7 @@ export function useFlowSim(params: SimParams): SimResult {
       const peakMonthOutflowB = Math.max(
         ...IPO_MONTHS.map((month) => stockMonthTotals[month] ?? 0)
       );
-      const daysOfVolume = peakMonthOutflowB / stock.adv;
+      const daysOfVolume = (peakMonthOutflowB * CONGESTION_UPLIFT) / stock.adv;
 
       // Square-root impact model for price drawdown.
       // Note: understates the true drawdown for substitution-heavy names —
